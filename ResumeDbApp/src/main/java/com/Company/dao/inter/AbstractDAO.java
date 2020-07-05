@@ -14,7 +14,7 @@ import java.sql.DriverManager;
  */
 public abstract class AbstractDAO {
      public  Connection connection() throws Exception{
-        // Class.forName("com.mysql.jdbc.Driver");
+        Class.forName("com.mysql.cj.jdbc.Driver");
         String url      = "jdbc:mysql://localhost:3306/resume";
         String username = "root";
         String password = "12345";

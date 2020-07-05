@@ -33,11 +33,11 @@ public class Contex {
     return new UserEmploymentHistoryDaoImpl();
     }
       
-     public static SkillDaoInter skillDao(){
+     public static SkillDaoInter instanceSkillDao(){
     return new SkillDaoImpl();
     }
      
-     public static CountryDaoInter countryDao(){
+     public static CountryDaoInter instanceCountryDao(){
     return new CountryDaoImpl();
     }
     

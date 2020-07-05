@@ -28,11 +28,12 @@ import com.Company.dao.inter.UserSkillDaoInter;
 public class UserSkillDaoImpl extends AbstractDAO implements UserSkillDaoInter{
     
    private UserSkill getUserSKILL(ResultSet rs) throws Exception{
+    int userSkillId = rs.getInt("userSkillId");   
     int userId = rs.getInt("id");
     int skillId = rs.getInt("skill_id");
     String skill_name = rs.getString("skill_name");
     int power  = rs.getInt("power");
-    return new UserSkill(null,new User(userId), new Skill(skillId,skill_name), power);
+    return new UserSkill(userSkillId,new User(userId), new Skill(skillId,skill_name), power);
     }
 
     @Override
@@ -40,6 +41,7 @@ public class UserSkillDaoImpl extends AbstractDAO implements UserSkillDaoInter{
       List<UserSkill> result =new ArrayList<>();
         try(Connection c    = connection()) {
             PreparedStatement stmt = c.prepareStatement("SELECT" +
+                " us.id as userSkillId, "+  
                 " u.*," +
                 " us.skill_id," +
                 " s.NAME AS Skill_name," +
@@ -62,5 +64,45 @@ public class UserSkillDaoImpl extends AbstractDAO implements UserSkillDaoInter{
         }
         return result;
     }
-    
+
+    @Override
+    public boolean insertUserSkill(UserSkill u) {
+      try(Connection c    = connection()){
+      PreparedStatement stm=c.prepareStatement("insert into user_skill (skill_id,user_id,power) values (?,?,?)");
+      stm.setInt(1, u.getSkill().getId());
+       stm.setInt(2, u.getUser().getId());
+        stm.setInt(3, u.getPower());
+            return stm.execute();
+          }catch(Exception ex){
+           ex.printStackTrace();
+           return false;
+        }
+    }
+
+    @Override
+    public boolean updateUserSkill(UserSkill u) {
+     try(Connection c    = connection()){
+      PreparedStatement stm=c.prepareStatement("update user_skill set skill_id=?,user_id=?,power=? where id=? ");
+      stm.setInt(1, u.getSkill().getId());
+       stm.setInt(2, u.getUser().getId());
+        stm.setInt(3, u.getPower());
+          stm.setInt(4, u.getId());
+            return stm.execute();
+          }catch(Exception ex){
+           ex.printStackTrace();
+           return false;
+        }
+    }
+
+    @Override
+    public boolean removeUserSkill(int id) {
+     try(Connection c    = connection()){
+      PreparedStatement stm=c.prepareStatement("delete from user_skill where id=?");
+      stm.setInt(1, id);
+      return stm.execute();
+    }catch(Exception ex){
+     ex.printStackTrace();
+     return false;
+        }
+    }
 }

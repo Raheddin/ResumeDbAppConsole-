@@ -15,7 +15,7 @@ public class Main {
     
     
     public static void main(String[] args) throws Exception {
-        CountryDaoInter userDao =Contex.countryDao();
+        CountryDaoInter userDao =Contex.instanceCountryDao();
         System.out.println(userDao.getAll());
       
        /// System.out.println(userDao.getAllskillByUserId(2));

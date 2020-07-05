@@ -10,6 +10,7 @@ import com.Company.dao.inter.SkillDaoInter;
 import com.Company.entity.Skill;
 import com.Company.entity.User;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -50,6 +51,28 @@ public class SkillDaoImpl extends AbstractDAO implements SkillDaoInter{
           ex.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public boolean insertSkill(Skill s) {
+     boolean b= true;
+     try(Connection c    = connection()){
+      PreparedStatement stm=c.prepareStatement("insert into skill (name) values (?)",Statement.RETURN_GENERATED_KEYS);
+        stm.setString(1,s.getName());
+           stm.execute();
+          
+           ResultSet generatedKeys =stm.getGeneratedKeys();
+            if(generatedKeys.next()){
+                s.setId(generatedKeys.getInt(1));
+            }
+            else{
+                throw  new SQLException("Creating skill failed, no ID obtained.");
+            }
+          }catch(Exception ex){
+              b=false;
+           ex.printStackTrace();
+        }   
+     return b;
     }
 
 
