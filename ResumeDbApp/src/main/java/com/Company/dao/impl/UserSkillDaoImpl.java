@@ -40,19 +40,20 @@ public class UserSkillDaoImpl extends AbstractDAO implements UserSkillDaoInter{
     public List<UserSkill> getAllskillByUserId(int userId) {
       List<UserSkill> result =new ArrayList<>();
         try(Connection c    = connection()) {
-            PreparedStatement stmt = c.prepareStatement("SELECT" +
-                " us.id as userSkillId, "+  
-                " u.*," +
-                " us.skill_id," +
-                " s.NAME AS Skill_name," +
-                " us.power " +
-                " FROM" +
-                " user_skill us" +
-                " LEFT JOIN USER u ON u.id = us.user_id" +
-                " LEFT JOIN skill s ON s.id = us.skill_id " +
-                " WHERE" +
-                " u.id = ?");
-                            stmt.setInt(1, userId);
+            String e="SELECT" +
+                    " us.id as userSkillId, "+
+                    " u.*," +
+                    " us.skill_id," +
+                    " s.NAME AS Skill_name," +
+                    " us.power " +
+                    " FROM" +
+                    " user_skill us" +
+                    " LEFT JOIN USER u ON u.id = us.user_id" +
+                    " LEFT JOIN skill s ON s.id = us.skill_id " +
+                    " WHERE" +
+                    " u.id = ?";
+            PreparedStatement stmt = c.prepareStatement(e);
+             stmt.setInt(1, userId);
             stmt.execute();
             ResultSet rs =stmt.getResultSet();
             while(rs.next()){

@@ -5,6 +5,7 @@
  */
 package com.Company.dao.impl;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.Company.entity.Country;
 import com.Company.entity.Skill;
 import com.Company.entity.User;
@@ -47,13 +48,27 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
         Country brithplace = new Country(brithplaceid, brithplaceStr, null);
         return new User(id, name, surname, phone, email, profileDesc, address, brithDate, nationality, brithplace);
     }
+    private User getUserSimpl(ResultSet rs) throws Exception {
+        int id = rs.getInt("id");
+        String name = rs.getString("name");
+        String surname = rs.getString("surname");
+        String phone = rs.getString("phone");
+        String email = rs.getString("email");
+        String profileDesc = rs.getString("profile_description");
+        String address = rs.getString("address");
+        Date brithDate = rs.getDate("brithDate");
+        int nationalityId = rs.getInt("Nationality_id");
+        int brithplaceid = rs.getInt("brithplace_id");
+        User user= new User(id, name, surname, phone, email, profileDesc, address, brithDate, null, null);
+        user.setPassword(rs.getString("password"));
+        return user;
+    }
 
     @Override
-    public List<User> getAll() {
+   public List<User> getAll(String name,String surname,Integer nationalityId) {
         List<User> result = new ArrayList<>();
         try (Connection c = connection()) {
-            Statement stmt = c.createStatement();
-            stmt.execute("select " +
+              String sql ="select " +
                     " u.* " +
                     ",c.name as brithplace " +
                     ",n.nationality  " +
@@ -61,7 +76,31 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
                     "LEFT JOIN country n " +
                     "on  u.Nationality_id = n.id " +
                     "LEFT JOIN country c " +
-                    "on  u.brithplace_id = c.id");
+                    "on  u.brithplace_id = c.id where 1=1 ";
+            if(name!=null && !name.trim().isEmpty()){
+                sql +=" and u.name=?";
+            }
+            if (surname!=null && !surname.trim().isEmpty()){
+                sql +=" and u.surname = ?";
+            }
+            if(nationalityId!=null){
+                sql +=" and u.Nationality_id = ?";
+            }
+            PreparedStatement stmt = c.prepareStatement(sql);
+           int i=1;
+            if(name!=null && !name.trim().isEmpty()){
+                System.out.println(name);
+                stmt.setString(i,name);
+                i++;
+            }
+            if(surname!=null && !surname.trim().isEmpty()){
+                stmt.setString(i,surname);
+                i++;
+            }
+            if(nationalityId!=null){
+                stmt.setInt(i,nationalityId);
+            }
+            stmt.execute();
             ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
                 User u = getUser(rs);
@@ -72,7 +111,6 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
         }
         return result;
     }
-
     @Override
     public boolean updateUser(User u) {
         try (Connection c = connection()) {
@@ -106,6 +144,39 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
     }
 
     @Override
+    public User findByEmailAndPassword(String email, String password) {
+        User result = null;
+        try (Connection c = connection()) {
+            PreparedStatement stmt = c.prepareStatement("select * from user u where u.email=? and u.password=?");
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+            ResultSet rs =stmt.executeQuery();
+            while (rs.next()) {
+                result = getUserSimpl(rs);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return  result;
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        User result = null;
+        try (Connection c = connection()) {
+            PreparedStatement stmt = c.prepareStatement("select * from user u where u.email=?");
+            stmt.setString(1, email);
+            ResultSet rs =stmt.executeQuery();
+            while (rs.next()) {
+                result = getUserSimpl(rs);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return  result;
+    }
+
+    @Override
     public User getById(int userId) {
         User result = null;
         try (Connection c = connection()) {
@@ -129,17 +200,19 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
         return result;
     }
 
+    private BCrypt.Hasher bcrypt=BCrypt.withDefaults();
     @Override
     public boolean addUser(User u) {
         try (Connection c = connection()) {
-            PreparedStatement stmt = c.prepareStatement("insert into  user (name,surname,phone,email,profile_Description,brithdate,address) values (?,?,?,?,?)");
+            PreparedStatement stmt = c.prepareStatement("insert into  user (name,surname,phone,email,password,profile_Description,brithdate,address) values (?,?,?,?,?,?,?,?)");
             stmt.setString(1, u.getName());
             stmt.setString(2, u.getSurName());
             stmt.setString(3, u.getPhone());
             stmt.setString(4, u.getEmail());
-            stmt.setString(5, u.getProfileDesc());
-            stmt.setDate(6, u.getBrithDate());
-            stmt.setString(7, u.getAddress());
+            stmt.setString(5, bcrypt.hashToString(4,u.getPassword().toCharArray()));
+            stmt.setString(6, u.getProfileDesc());
+            stmt.setDate(7, u.getBrithDate());
+            stmt.setString(8, u.getAddress());
             return stmt.execute();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -147,4 +220,9 @@ public class UserDaoImpl extends AbstractDAO implements UserDaoInter {
         }
     }
 
+    public static void main(String[] args) {
+        User u = new User(0,"test","test","test","test",null,null,null,null,null);
+        u.setPassword("12345");
+         new UserDaoImpl().addUser(u);
+    }
 }
